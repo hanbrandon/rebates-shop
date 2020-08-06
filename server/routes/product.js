@@ -53,14 +53,35 @@ router.post('/getProducts', (req, res) => {
 	let limit = req.body.limit ? parseInt(req.body.limit) : 100;
 	let skip = parseInt(req.body.skip);
 
-	Product.find().populate('writer').sort([ [ sortBy, order ] ]).skip(skip).limit(limit).exec((err, products) => {
-		if (err)
-			return res.status(400).json({
-				success: false,
-				err
+	let findArgs = {};
+	let term = req.body.searchTerm;
+
+	console.log('TERM:', term);
+	if (term) {
+		Product.find({ productName: { $regex: term, $options: 'i' } })
+			.populate('writer')
+			.sort([ [ sortBy, order ] ])
+			.skip(skip)
+			.limit(limit)
+			.exec((err, products) => {
+				if (err)
+					return res.status(400).json({
+						success: false,
+						err
+					});
+				console.log(products);
+				res.status(200).json({ success: true, products, postSize: products.length });
 			});
-		res.status(200).json({ success: true, products, postSize: products.length });
-	});
+	} else {
+		Product.find().populate('writer').sort([ [ sortBy, order ] ]).skip(skip).limit(limit).exec((err, products) => {
+			if (err)
+				return res.status(400).json({
+					success: false,
+					err
+				});
+			res.status(200).json({ success: true, products, postSize: products.length });
+		});
+	}
 });
 
 router.get('/getProduct/:postId', (req, res) => {

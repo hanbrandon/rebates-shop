@@ -8,6 +8,7 @@ const productSchema = mongoose.Schema({
 	},
 	productName: {
 		type: String,
+		index: true,
 		maxlength: 50
 	},
 	amazonLink: {

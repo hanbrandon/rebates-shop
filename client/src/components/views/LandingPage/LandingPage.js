@@ -10,6 +10,8 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
 import { Link } from 'react-router-dom';
 
+import SearchFeature from './Sections/SearchFeature';
+
 const useStyles = makeStyles((theme) => ({
 	container: {
 		paddingTop: theme.spacing(4),
@@ -97,7 +99,7 @@ const LandingPage = (props) => {
 	const [ Skip, setSkip ] = useState(0);
 	const [ Limit, setLimit ] = useState(8);
 	const [ PostSize, setPostSize ] = useState(0);
-
+	const [ SearchTerms, setSearchTerms ] = useState('');
 	useEffect(() => {
 		const variables = {
 			skip: Skip,
@@ -109,9 +111,13 @@ const LandingPage = (props) => {
 	const getProducts = (variables) => {
 		axios.post('/api/product/getProducts', variables).then((res) => {
 			if (res.data.success) {
-				setProducts([ ...Products, ...res.data.products ]);
+				if (variables.loadMore) {
+					setProducts([ ...Products, ...res.data.products ]);
+				} else {
+					setProducts(res.data.products);
+				}
 				setPostSize(res.data.postSize);
-				console.log(res.data.postSize);
+				console.log(Products);
 			} else {
 				alert('Failed to fetch product datas');
 			}
@@ -123,12 +129,26 @@ const LandingPage = (props) => {
 
 		const variables = {
 			skip: skip,
-			limit: Limit
+			limit: Limit,
+			loadMore: true,
+			searchTerm: SearchTerms
 		};
+
 		getProducts(variables);
 		setSkip(skip);
 	};
 
+	const updateSearchTerms = (newSearchTerm) => {
+		const variables = {
+			skip: 0,
+			limit: Limit,
+			searchTerm: newSearchTerm
+		};
+
+		setSkip(0);
+		setSearchTerms(newSearchTerm);
+		getProducts(variables);
+	};
 	const classes = useStyles();
 
 	if (!Products) {
@@ -139,6 +159,7 @@ const LandingPage = (props) => {
 				{/* Hero */}
 				<Grid item xs={12} />
 				{/* Products */}
+				<SearchFeature refreshFunction={updateSearchTerms} />
 				{Products.map((product, index) => (
 					<Grid item key={index} xs={12} sm={6} md={3}>
 						<Card className={classes.card}>
